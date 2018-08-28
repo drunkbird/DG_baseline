@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import operator
 import os
 
@@ -55,7 +56,7 @@ def max_frequecny_feature(name):
     print(len(features))
 
 def get_classes_feature(name, feature):
-    df = pd.read_csv('data/splited_data/split_to_classes/{0}.csv'.format(name))
+    df = pd.read_csv('../data/splited_data/split_to_classes/{0}.csv'.format(name))
     features_num = {}
     features_fre = {}
 
@@ -96,17 +97,17 @@ def get_classes_feature(name, feature):
         res.append(temp)
     # saving。。。
     res = pd.DataFrame(res, columns=['id', 'frequency', 'num'])
-    res = res[res['frequency'] > 0.25]
-    print(res[res['frequency']>0.25].shape)
-    res.to_csv('data/features/{0}/{0}_{1}.csv'.format(feature, name), index=False)
+    # res = res[res['frequency'] > 0.01]
+    print(res.shape)
+    res.to_csv('../data/features/{0}_1/{0}_{1}.csv'.format(feature, name), index=False)
     print('{0} is finished'.format(name))
 
 def count_feature_classes(name, feature):
     if feature == 'article':
-        test_feature = open('data/features/all_features/test_feature_article.txt')
+        test_feature = open('../data/features/all_features/test_feature_article.txt')
         test_feature = test_feature.readline().split('\t')
     elif feature == 'word_seg':
-        test_feature = open('data/features/all_features/test_feature_article.txt')
+        test_feature = open('../data/features/all_features/test_feature_article.txt')
         test_feature = test_feature.readline().split('\t')
     else:
         print('wrong')
@@ -115,7 +116,7 @@ def count_feature_classes(name, feature):
     feature_dic = {}
     feature_class = {}
     for index in range(1, 20):
-        df = pd.read_csv('data/features/{2}/{2}_{0}_{1}.csv'.format(name, index, feature))
+        df = pd.read_csv('../data/features/{2}/{2}_{0}_{1}.csv'.format(name, index, feature))
         for i in range(df.shape[0]):
             id = df.iloc[i, 0]
             if id not in test_feature:
@@ -133,9 +134,9 @@ def count_feature_classes(name, feature):
         print(k,v)
         feature_list.append([k, v,' '.join(list(feature_class[k]))])
     feature_df = pd.DataFrame(feature_list, columns=['id', 'frequency','classes'])
-    feature_df = feature_df[feature_df['frequency'] < 10]
+    #feature_df = feature_df[feature_df['frequency'] < 10]
     print(feature_df.info())
-    feature_df.to_csv('data/features/{0}.csv'.format(feature), index=False)
+    feature_df.to_csv('../data/features/{0}.csv'.format(feature), index=False)
 
 def find_all_feature(train=pd.DataFrame(),test=pd.DataFrame()):
     feature_train_article=set()
@@ -208,4 +209,21 @@ def ngram_feature(df,n,feature_name,df_name='train'):
         path = '{0}/{1}_{2}.csv'.format(path,df_name,feature_name)
         df.to_csv(path,index=False)
 
-
+def calcu_tf_idf( name, feature, Index):
+    df = pd.read_csv('../data/features/{1}_all/{1}_{0}_{2}.csv'.format(name,  feature, Index))
+    del df['num']
+    df_id = df['id']
+    df_idf = np.zeros(df.shape[0])
+    print(df.shape[0])
+    for index in range(1,20):
+        df_set = pd.read_csv('../data/features/{2}_all/{2}_{0}_{1}.csv'.format(name, index, feature))
+        df_set_id = df_set['id']
+        for i in range(df.shape[0]):
+            if(df_id[i] in df_set_id.values):
+                df_idf[i] += 1
+    tf = df['frequency']
+    tf_idf = tf*np.log(19/(1+df_idf))
+    df.insert(2,'IDF', df_idf)
+    df.insert(3,'TF_IDF',tf_idf)
+    df = df.sort_values(by='TF_IDF', axis=0, ascending=False)
+    df.to_csv('../data/features/idf_{0}_all/idf_{0}_{1}_{2}.csv'.format(feature, name, Index), index=False)
