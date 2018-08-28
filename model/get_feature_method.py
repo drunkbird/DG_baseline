@@ -180,7 +180,7 @@ def find_all_feature(train=pd.DataFrame(),test=pd.DataFrame()):
     print('test_article is %d'%len(feature_test_article))
     print('test_word_seg is %d' % len(feature_test_word_seg))
 
-    print('*******************************')
+    print('**********************')
     print('the comment feature of article is %d ' % len(feature_train_article-feature_test_article))
     print('the comment feature of word_seg is %d ' % len(feature_train_word_seg - feature_test_word_seg))
 
